@@ -1,0 +1,48 @@
+.sideBarContainer{
+  color: #dfe0e3;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  height: 100vh;
+  background-color: #1D252F;
+  position: sticky;
+}
+.sideBar{
+  width: 14%;
+  display: flex;
+  justify-content: end;
+}
+@media (max-width: 767px) {
+  .sideBar {
+    width: 100%;
+    position: absolute;
+  }
+}
+.sideBarContainer::-webkit-scrollbar {
+  display: none;
+}
+.hrClass{
+  color: rgb(85, 85, 85);
+  border-top-width: 1px;
+  width: 88%;
+}
+.sideBarPagesContainer{
+  padding-top: 0.3rem;
+}
+.sidebarPageLabel{
+  font-family: unset;
+  font-size: 17px;
+  text-align: end;
+}
+.sidebarHiddenPageLabel{
+  font-family: unset;
+  font-size: 13px;
+  text-align: end;
+}
+.sidebarPageArrow img{
+  filter: invert(1) brightness(2);
+  height: 100%;
+  width: 100%;
+}

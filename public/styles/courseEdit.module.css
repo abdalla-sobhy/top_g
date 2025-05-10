@@ -1,0 +1,312 @@
+.leftSide{
+  height: fit-content;
+  width: 85%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 3.5rem;
+  padding-bottom: 1rem;
+}
+@media (max-width: 767px) {
+  .leftSide {
+    width: 98%;
+  }
+}
+.modifyCourseContainer{
+  height: fit-content;
+  justify-content: end;
+  display: flex;
+  flex-direction: row;
+}
+.modifyCourse{
+background: white;
+display: flex;
+flex-direction: row;
+  gap: 1rem;
+    box-shadow: 0px 15px 12px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 5px;
+  color: #333;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 14px;
+  font-family: unset;
+  font-size: 23px;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  font-weight: 600;
+}
+.modifyCourseImgDiv{
+  height: 2.5rem;
+  width: 2.5rem;
+}
+.modifyCourseImgDiv img{
+  height: 100%;
+  width: 100%;
+}
+.modifyCourseLabel{
+  height: fit-content;
+  width: fit-content;
+}
+.CourseDataContainer{
+  background-color: white;
+  margin-top: 1.5rem;
+  width: 100%;
+  height: fit-content;
+  padding: 1rem;
+}
+.CourseData{
+  border: 1px solid rgb(219, 219, 219);
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1rem;
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+  padding-bottom: 1rem;
+}
+.CourseDataLabel{
+  color: #333;
+  text-align: right;
+  font-family: system-ui;
+  font-size: 23px;
+  padding-bottom: 10px;
+  font-weight: 500;
+}
+hr{
+  color: rgb(219, 219, 219);
+  border-top-width: 1px;
+}
+.courseClassification{
+  gap: 0.5rem;
+}
+
+:global(.react-select__option--is-focused:active),
+:global(.react-select__option:active) {
+  background-color: #E5E7EB !important;
+}
+:global(.react-select__option:focus) {
+  outline: none !important;
+}
+:global(.react-select__option) {
+  -webkit-tap-highlight-color: transparent;
+}
+:global(.react-select__control--is-focused),
+:global(.react-select__control:focus-within),
+:global(.react-select__control:hover) {
+  box-shadow: none !important;
+  border-color: #ccc !important;
+}
+.courseClassificationDropdownContainer {
+  color: #333;
+  font-family: system-ui;
+  font-size: 10px;
+}
+:global(.react-select__single-value) {
+  font-size: 14px !important;
+}
+:global(.react-select__placeholder) {
+  font-size: 14px  !important;
+  color: #6B7280 !important;
+}
+:global(.react-select__input-container) {
+  font-size: 14px  !important;
+}
+:global(.react-select__indicator) {
+  padding: 4px !important;
+}
+:global(.react-select__indicator svg) {
+  width: 13px;
+  height: 13px;
+}
+
+.AddClassification{
+  height: 1.5rem;
+}
+.addCourseDiv{
+  height: 4.5rem;
+  width: 100%;
+  padding-top: 2rem;
+}
+.AddClassification button {
+  display: inline-flex; /* To align text and icon horizontally */
+  align-items: center; /* Vertically align items in the center */
+  background-color: white; /* White background */
+  color: #616161; /* Dark text color */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 13px; /* Adjust font size */
+  cursor: pointer; /* Indicate it's clickable */
+  gap: 8px; /* Space between text and icon */
+  height: 100%;
+  width: fit-content;
+  float: right;
+  border: 1px solid #3B85FB;
+}
+.addCourseDiv button{
+  display: inline-flex; /* To align text and icon horizontally */
+  align-items: center; /* Vertically align items in the center */
+  background-color: #146eff; /* White background */
+  color: white; /* Dark text color */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 13px; /* Adjust font size */
+  cursor: pointer; /* Indicate it's clickable */
+  gap: 8px; /* Space between text and icon */
+  width: fit-content;
+  float: right;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+.AddClassification button:hover{
+  background-color: #3B85FB;
+  color: white;
+}
+.AddClassification button:hover img {
+  filter: invert(1) brightness(2);
+}
+.addCourseDiv button img{
+  filter: invert(1) brightness(2);
+}
+.courseTitleTextBarContainer input{
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #616161;
+  font-family: system-ui;
+  font-size: 17px;
+  width: 100%;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+.courseTitleTextBarContainer input:focus{
+  outline: none;
+}
+.courseDiscreptionContainer{
+  height: 23rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+.CKEditorContainer{
+  height: 92%;
+}
+:global(.ck-editor__editable_inline) {
+  /* min-height: 15rem !important; */
+  height: 88% !important;
+  padding-right: 2rem !important;
+}
+
+:global(.ck-content) {
+  /* min-height: 15rem !important; */
+  height: 88% !important;
+  padding-right: 2rem !important;
+}
+.label{
+  color: #616161;
+  font-family: system-ui;
+  font-size: 14px;
+  text-align: end;
+}
+.courseDurationContainer{
+  color: #616161;
+  font-family: system-ui;
+  font-size: 14px;
+  text-align: end;
+}
+.IntroVideoContainer{
+  width: 49%;
+}
+.courseDurationTextBarContainer{
+height: 2.1rem;
+}
+.courseDurationTextBarContainer input{
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #616161;
+  font-family: system-ui;
+  font-size: 17px;
+  width: 100%;
+  padding-right: 5px;
+  padding-left: 5px;
+  height: 100%;
+}
+.courseDurationTextBarContainer input:focus{
+  outline: none;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+
+
+
+.CourseTypeCheckContainer input {
+  appearance: none;
+
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+
+  border: 2px solid #999;
+  transition: 0.2s all linear;
+  margin-right: 5px;
+
+  position: relative;
+  top: 4px;
+}
+.CourseTypeCheckContainer input:checked {
+  border: 4px solid #4646ff;
+}
+
+
+.checkboxContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding-right: 0.5rem;
+}
+
+.checkboxContainer input {
+  /* remove browser default */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 16px;
+  height: 16px;
+  border: 2px solid #999;      /* gray border */
+  border-radius: 4px;
+  background-color: #eee;      /* light gray box */
+  position: relative;
+  transition: all 0.2s;
+}
+
+.checkboxContainer input:checked {
+  background-color: #4646ff;   /* blue fill */
+  border-color: #4646ff;
+}
+
+.checkboxContainer input:checked::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;          /* white checkmark */
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.maxNumberOfStudents{
+  color: #616161;
+  font-family: system-ui;
+  font-size: 14px;
+  text-align: end;
+  width: 49%;
+}

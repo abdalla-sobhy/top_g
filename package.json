@@ -1,0 +1,61 @@
+{
+  "name": "bottom-g",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ckeditor/ckeditor5-block-quote": "^45.0.0",
+    "@ckeditor/ckeditor5-font": "^45.0.0",
+    "@ckeditor/ckeditor5-heading": "^45.0.0",
+    "@ckeditor/ckeditor5-horizontal-line": "^45.0.0",
+    "@ckeditor/ckeditor5-image": "^45.0.0",
+    "@ckeditor/ckeditor5-link": "^45.0.0",
+    "@ckeditor/ckeditor5-list": "^45.0.0",
+    "@ckeditor/ckeditor5-media-embed": "^45.0.0",
+    "@ckeditor/ckeditor5-react": "^9.5.0",
+    "@ckeditor/ckeditor5-special-characters": "^45.0.0",
+    "@ckeditor/ckeditor5-table": "^45.0.0",
+    "@ckeditor/ckeditor5-upload": "^45.0.0",
+    "@ckeditor/ckeditor5-watchdog": "^45.0.0",
+    "@tailwindcss/vite": "^4.1.5",
+    "@types/node": "^22.15.3",
+    "ckeditor5": "^45.0.0",
+    "ckeditor5-premium-features": "^45.0.0",
+    "clsx": "^2.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "react-responsive": "^10.0.1",
+    "react-select": "^5.10.1",
+    "tailwind-merge": "^3.2.0",
+    "tailwindcss": "^4.1.5",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.22.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.26.1",
+    "vite": "^6.3.1"
+  },
+  "compilerOptions": {
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  }
+}
