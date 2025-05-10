@@ -139,9 +139,9 @@ export default function SideBar({ className = "", onClose }: SideBarProps) {
                 {menu.subpages.length > 0 && (
                   <div className={`${sideBar.sidebarPageArrow} w-2.5 h-2.5`}>
                     {openMenus[menu.label] ? (
-                      <img src="/down-arrow-svgrepo-com.svg" alt="إخفاء" />
+                      <img src="/assets/imgs/down-arrow-svgrepo-com.svg" alt="إخفاء" />
                     ) : (
-                      <img src="/right-arrow-svgrepo-com.svg" alt="عرض" />
+                      <img src="/assets/imgs/right-arrow-svgrepo-com.svg" alt="عرض" />
                     )}
                   </div>
                 )}

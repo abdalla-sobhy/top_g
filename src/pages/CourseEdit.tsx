@@ -99,7 +99,7 @@ export default function CourseEdit() {
               onClick={() => setShowSidebar(true)}
             >
               <img
-                src="../../public/window_content_svgrepo_com.svg"
+                src="/assets/imgs/window_content_svgrepo_com.svg"
                 className="w-8 h-8"
                 alt="فتح القائمة الجانبية"
               />
@@ -109,7 +109,7 @@ export default function CourseEdit() {
       <div className={CourseEditCSS.modifyCourseContainer}>
         <div className={`${CourseEditCSS.modifyCourse}`}>
         <div className={CourseEditCSS.modifyCourseLabel}>تعديل الدورة</div>
-        <div className={`${CourseEditCSS.modifyCourseImgDiv}`}><img src="@/../public/ChatGPT Image May 9, 2025, 03_32_39 PM.png" alt="" /></div>
+        <div className={`${CourseEditCSS.modifyCourseImgDiv}`}><img src="/assets/imgs/ChatGPT Image May 9, 2025, 03_32_39 PM.png" alt="" /></div>
         </div>
       </div>
       <div className={CourseEditCSS.CourseDataContainer}>
@@ -166,7 +166,7 @@ export default function CourseEdit() {
                 <button>
                   <span>إضافة تصنيف</span>
                   <img
-                    src="../../public/plus_svgrepo_com.svg"
+                    src="/assets/imgs/plus_svgrepo_com.svg"
                     alt="Plus Icon"
                     className={`${CourseEditCSS.plusIcon} w-2`}
                   />
@@ -485,7 +485,7 @@ export default function CourseEdit() {
           <div className={CourseEditCSS.addCourseDiv}>
                 <button>
                 <img
-                    src="../../public/plus_svgrepo_com.svg"
+                    src="/assets/imgs/plus_svgrepo_com.svg"
                     alt="Plus Icon"
                     className={`${CourseEditCSS.plusIcon} w-3`}
                   />
