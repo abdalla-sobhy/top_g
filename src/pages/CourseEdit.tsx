@@ -222,15 +222,15 @@ export default function CourseEdit() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">
-                              التصنيف
-                            </Label>
                             <Input
                               id="name"
                               value={addCategory}
                               onChange={(e) => setAddCategory(e.target.value)}
                               className="col-span-3"
                             />
+                            <Label htmlFor="name" className="text-right">
+                              التصنيف
+                            </Label>
                           </div>
                         </div>
                         <DialogFooter className="flex justify-center! w-full">
