@@ -227,6 +227,7 @@ export default function CourseEdit() {
                               value={addCategory}
                               onChange={(e) => setAddCategory(e.target.value)}
                               className="col-span-3"
+                              dir="rtl"
                             />
                             <Label htmlFor="name" className="text-right">
                               التصنيف
