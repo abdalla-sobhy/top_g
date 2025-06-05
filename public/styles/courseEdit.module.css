@@ -206,6 +206,12 @@ hr{
   font-size: 14px;
   text-align: end;
 }
+.redLabel{
+  color: rgb(255, 0, 0);
+  font-family: system-ui;
+  font-size: 14px;
+  text-align: end;
+}
 .courseDurationContainer{
   color: #616161;
   font-family: system-ui;

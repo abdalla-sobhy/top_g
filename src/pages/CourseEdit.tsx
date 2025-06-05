@@ -25,12 +25,12 @@ interface options {
   label: string;
 }
 
-const TeachersNames: options[] = [
-  { value: "Ahmed", label: "Ahmed" },
-  { value: "Mohamed", label: "Mohamed" },
-  { value: "Ahmed123", label: "Ahmed123" },
-  { value: "Mohamed23423", label: "Mohamed23423" },
-];
+// const TeachersNames: options[] = [
+//   { value: "Ahmed", label: "Ahmed" },
+//   { value: "Mohamed", label: "Mohamed" },
+//   { value: "Ahmed123", label: "Ahmed123" },
+//   { value: "Mohamed23423", label: "Mohamed23423" },
+// ];
 
 const Levels: options[] = [
   { value: "كل المستويات", label: "كل المستويات" },
@@ -66,10 +66,18 @@ const CourseTypeLabels: Record<CourseTypeRadio, string> = {
 export default function CourseEdit() {
   const [courseCategories, setCourseCategories] = useState<options[]>([
     { value: "uncategorized", label: "بدون تصنيف" },
-    { value: "option1", label: "Option 1" },
-    { value: "option2", label: "Option 2" },
-    { value: "option3", label: "Option 3" },
   ]);
+
+  const [teachers, setTearchers] = useState<options[]>([
+    { value: "", label: "" },
+  ]);
+
+
+  const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  const [areTeachersLoading, setAreTeachersLoading] = useState(true);
+  const [TeachersError, setTeachersError] = useState<string | null>(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -77,14 +85,71 @@ export default function CourseEdit() {
   const [addCategory, setAddCategory] = useState("أسم التصنيف");
   const [selectedCourseTitleOption, setselectedCourseTitleOption] =
     useState<options | null>(courseCategories[0]);
-  const [selectedTeacherNameOption, setselectedTeacherNameOption] =
-    useState<options | null>(TeachersNames[0]);
+  const [selectedTeacher, setselectedTeacher] = useState<options | null>(teachers[0]);
   const isAtLeastMd = useMediaQuery({ minWidth: 768 });
   const [selectedLevel, setselectedLevel] = useState<options | null>(Levels[0]);
   const [selectedStartingVideos, setselectedStartingVideos] =
     useState<options | null>(IntroVideos[0]);
   const [courseType, setCourseType] = useState<CourseTypeRadio>("free");
   const [isFeatured, setIsFeatured] = useState(false);
+
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  const handleAddCategory = async (categoryName: string) => {
+    setDialogError(null);
+    setIsSubmitting(true);
+    
+    try {
+      // const token = localStorage.getItem("auth_token");
+      // if (!token) throw new Error("Authentication token not found");
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/course-categories",
+        {
+          method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            // "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name: categoryName }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "فشل إضافة التصنيف");
+      }
+
+      const data = await response.json();
+      
+      // Transform new category to options format
+      const newCategory = {
+        value: data.id.toString(),
+        label: data.name,
+      };
+
+      // Update categories list (keep "uncategorized" last)
+      setCourseCategories(prev => [
+        ...prev.filter(cat => cat.value !== "uncategorized"),
+        newCategory,
+        { value: "uncategorized", label: "بدون تصنيف" }
+      ]);
+      
+      setselectedCourseTitleOption(newCategory);
+      setAddCategory("");
+      setIsDialogOpen(false);
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setDialogError("فشل إضافة التصنيف. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   const createHandleChange = (
     setter: React.Dispatch<React.SetStateAction<options | null>>
@@ -93,6 +158,111 @@ export default function CourseEdit() {
       setter(opt);
     };
   };
+
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        // const token = localStorage.getItem("auth_token"); // Adjust token retrieval as needed
+        // if (!token) {
+        //   throw new Error("Authentication token not found");
+        // }
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/users",
+          {
+            headers: {
+              "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+              Accept: "application/json",
+              // Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Transform API response to options format
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedData = data.data.map((teachers: any) => ({
+          value: teachers.id.toString(),
+          label: teachers.firstname+" "+teachers.lastname,
+        }));
+
+        setTearchers([
+          ...transformedData,
+        ]);
+        if (!selectedTeacher && transformedData.length > 0) {
+          setselectedTeacher(transformedData[0]);
+        }
+        
+      } catch (err) {
+        console.error("Error fetching teachers:", err);
+        setTeachersError("فشل تحميل المدرسين. يرجى المحاولة لاحقًا.");
+      } finally {
+        setAreTeachersLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
+
+
+
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        // const token = localStorage.getItem("auth_token"); // Adjust token retrieval as needed
+        // if (!token) {
+        //   throw new Error("Authentication token not found");
+        // }
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/course-categories",
+          {
+            headers: {
+              "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+              Accept: "application/json",
+              // Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Transform API response to options format
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedData = data.data.map((category: any) => ({
+          value: category.id.toString(),
+          label: category.name,
+        }));
+
+        setCourseCategories([
+          ...transformedData,
+          { value: "uncategorized", label: "بدون تصنيف" },
+        ]);
+        
+        if (!selectedCourseTitleOption && transformedData.length > 0) {
+          setselectedCourseTitleOption(transformedData[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setCategoriesError("فشل تحميل التصنيفات. يرجى المحاولة لاحقًا.");
+      } finally {
+        setAreCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (!isAtLeastMd && showSidebar) {
@@ -143,6 +313,11 @@ export default function CourseEdit() {
                 className={`${CourseEditCSS.courseClassification} flex flex-col`}
               >
                 <div className={CourseEditCSS.label}>تصنيف الدورة</div>
+                {areCategoriesLoading ? (
+  <div className={CourseEditCSS.label}>جارٍ تحميل التصنيفات...</div>
+) : categoriesError ? (
+  <div className={CourseEditCSS.redLabel}>{categoriesError}</div>
+) : (
                 <div
                   className={`${CourseEditCSS.courseClassificationDropdownContainer} md:w-fit w-full flex justify-end`}
                 >
@@ -184,6 +359,7 @@ export default function CourseEdit() {
                     />
                   </div>
                 </div>
+)}
                 <div className={CourseEditCSS.AddClassification}>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
@@ -201,7 +377,7 @@ export default function CourseEdit() {
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <form
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           const trimmed = addCategory.trim();
                           if (!trimmed) return;
@@ -210,6 +386,7 @@ export default function CourseEdit() {
                           setselectedCourseTitleOption(newCat);
                           setAddCategory("");
                           setIsDialogOpen(false);
+                          await handleAddCategory(trimmed);
                         }}
                       >
                         <DialogHeader className="flex justify-center w-full">
@@ -233,10 +410,15 @@ export default function CourseEdit() {
                               التصنيف
                             </Label>
                           </div>
+                          {dialogError && (
+                            <div className="text-red-500 text-sm text-center">
+                              {dialogError}
+                            </div>
+                          )}
                         </div>
                         <DialogFooter className="flex justify-center! w-full">
-                          <Button type="submit" className="flex justify-center">
-                            أضف التصنيف
+                          <Button type="submit" disabled={isSubmitting} className="flex justify-center">
+                            {isSubmitting ? "جاري الإضافة..." : "أضف التصنيف"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -269,12 +451,17 @@ export default function CourseEdit() {
               className={`${CourseEditCSS.teacherContainer} flex flex-col gap-1.5 mt-14`}
             >
               <div className={`${CourseEditCSS.label}`}>المعلم</div>
+              {areTeachersLoading ? (
+  <div className={CourseEditCSS.label}>جارٍ تحميل التصنيفات...</div>
+) : TeachersError ? (
+  <div className={CourseEditCSS.redLabel}>{TeachersError}</div>
+) : (
               <div>
                 <Select
                   classNamePrefix="react-select"
-                  value={selectedTeacherNameOption}
-                  onChange={createHandleChange(setselectedTeacherNameOption)}
-                  options={TeachersNames}
+                  value={selectedTeacher}
+                  onChange={createHandleChange(setselectedTeacher)}
+                  options={teachers}
                   isSearchable
                   styles={{
                     control: (base, { isFocused }) => ({
@@ -304,6 +491,7 @@ export default function CourseEdit() {
                   }}
                 />
               </div>
+              )}
             </div>
 
             <div
