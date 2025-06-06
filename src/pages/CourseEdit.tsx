@@ -1,5 +1,5 @@
 // React core
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 
 // Third‑party UI
@@ -13,39 +13,38 @@ import { Label } from "@/components/ui/label";
 
 // Feature‑specific components
 import VideoUploader from "../components/VideoUploader";
-import AttachmentUploader from "../components/AttachmentUploader";
+import AttachmentUploader, { AttachmentUploaderRef } from "../components/AttachmentUploader";
 import RichTextEditor from "../components/RichTextEditor";
 import SideBar from "@/components/SideBar";
 
 // Styles
 import CourseEditCSS from "../../public/styles/courseEdit.module.css";
 
+// --- Types ---
 interface options {
   value: string;
   label: string;
 }
 
-// const TeachersNames: options[] = [
-//   { value: "Ahmed", label: "Ahmed" },
-//   { value: "Mohamed", label: "Mohamed" },
-//   { value: "Ahmed123", label: "Ahmed123" },
-//   { value: "Mohamed23423", label: "Mohamed23423" },
-// ];
 
+interface CourseDetails {
+  title: string;
+  maxStudents: number | null;
+  targetAudience: string;
+  prerequisites: string;
+  originalPrice: number | null;
+  discountedPrice: number | null;
+  isPaid: boolean;
+  totalTime: number | null;
+}
+
+// --- Constants ---
 const Levels: options[] = [
   { value: "كل المستويات", label: "كل المستويات" },
   { value: "المستوي الاول", label: "المستوي الاول" },
   { value: "المستوي الثاني", label: "المستوي الثاني" },
   { value: "المستوي الثالث", label: "المستوي الثالث" },
 ];
-
-const videoTypeMap: { [key: string]: string[] } = {
-  MP4: ["video/mp4"],
-  MKV: ["video/x-matroska"],
-  يوتيوب: [],
-  مضمن: [],
-  "رابط خارجي": [],
-};
 
 const IntroVideos: options[] = [
   { value: "لا يوجد", label: "لا يوجد" },
@@ -56,68 +55,106 @@ const IntroVideos: options[] = [
   { value: "رابط خارجي", label: "رابط خارجي" },
 ];
 
-type CourseTypeRadio = "free" | "paid";
-const CourseType: CourseTypeRadio[] = ["free", "paid"];
-const CourseTypeLabels: Record<CourseTypeRadio, string> = {
+const videoTypeMap: { [key: string]: string[] } = {
+  MP4: ["video/mp4"],
+  MKV: ["video/x-matroska"],
+  يوتيوب: [],
+  مضمن: [],
+  "رابط خارجي": [],
+};
+
+
+const CourseTypeLabels = {
   free: "مجانية",
   paid: "مدفوعة",
 };
 
 export default function CourseEdit() {
-  const [courseCategories, setCourseCategories] = useState<options[]>([
-    { value: "uncategorized", label: "بدون تصنيف" },
-  ]);
-
-  const [teachers, setTearchers] = useState<options[]>([
-    { value: "", label: "" },
-  ]);
-
-
+  // --- Course categories ---
+  const [courseCategories, setCourseCategories] = useState<options[]>([{
+    value: "uncategorized",
+    label: "بدون تصنيف",
+  }]);
   const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [selectedCourseTitleOption, setSelectedCourseTitleOption] = useState<options | null>(null);
 
+  // --- Teachers ---
+  const [teachers, setTeachers] = useState<options[]>([]);
   const [areTeachersLoading, setAreTeachersLoading] = useState(true);
-  const [TeachersError, setTeachersError] = useState<string | null>(null);
+  const [teachersError, setTeachersError] = useState<string | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<options | null>(null);
 
+  // --- Dialog ---
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [editorContent, setEditorContent] = useState("");
   const [addCategory, setAddCategory] = useState("أسم التصنيف");
-  const [selectedCourseTitleOption, setselectedCourseTitleOption] =
-    useState<options | null>(courseCategories[0]);
-  const [selectedTeacher, setselectedTeacher] = useState<options | null>(teachers[0]);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+
+  // --- UI & editor ---
+  const [editorContent, setEditorContent] = useState("");
+  const [showSidebar, setShowSidebar] = useState(false);
   const isAtLeastMd = useMediaQuery({ minWidth: 768 });
-  const [selectedLevel, setselectedLevel] = useState<options | null>(Levels[0]);
-  const [selectedStartingVideos, setselectedStartingVideos] =
-    useState<options | null>(IntroVideos[0]);
-  const [courseType, setCourseType] = useState<CourseTypeRadio>("free");
+
+  // --- Course Info ---
+  const [selectedStartingVideos, setSelectedStartingVideos] = useState<options | null>(IntroVideos[0]);
+  const [selectedLevel, setSelectedLevel] = useState<options | null>(Levels[0]);
   const [isFeatured, setIsFeatured] = useState(false);
 
-  const [dialogError, setDialogError] = useState<string | null>(null);
+  // --- Course Details State ---
+  const [courseDetails, setCourseDetails] = useState<CourseDetails>({
+    title: "",
+    maxStudents: null,
+    targetAudience: "",
+    prerequisites: "",
+    originalPrice: null,
+    discountedPrice: null,
+    isPaid: false,
+    totalTime: null,
+  });
+
+  // --- Image ---
+  const attachmentRef = useRef<AttachmentUploaderRef>(null);
+
+  // --- Video ---
+  const [externalLink, setExternalLink] = useState("");
+  console.log(externalLink);
+
+  // --- Helpers ---
+  const createHandleChange = (setter: React.Dispatch<React.SetStateAction<options | null>>) => {
+    return (opt: SingleValue<options>) => setter(opt);
+  };
+
+  // ---Submitting ---
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
+  // --- General Input Change Handler ---
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const updatedValue = ["maxStudents", "originalPrice", "discountedPrice", "totalTime"].includes(name)
+      ? parseInt(value.replace(/\D/g, ""))
+      : value;
+
+    setCourseDetails(prev => ({
+      ...prev,
+      [name]: updatedValue
+    }));
+  };
+
   const handleAddCategory = async (categoryName: string) => {
     setDialogError(null);
-    setIsSubmitting(true);
-    
+    setIsAddingCategory(true);
     try {
-      // const token = localStorage.getItem("auth_token");
-      // if (!token) throw new Error("Authentication token not found");
-
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/course-categories",
-        {
-          method: "POST",
-          headers: {
-            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            // "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify({ name: categoryName }),
-        }
-      );
+      const response = await fetch("http://127.0.0.1:8000/api/course-categories", {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: categoryName }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -125,80 +162,48 @@ export default function CourseEdit() {
       }
 
       const data = await response.json();
-      
-      // Transform new category to options format
-      const newCategory = {
-        value: data.id.toString(),
-        label: data.name,
-      };
+      const newCategory = { value: data.id.toString(), label: data.name };
 
-      // Update categories list (keep "uncategorized" last)
-      setCourseCategories(prev => [
-        ...prev.filter(cat => cat.value !== "uncategorized"),
+      setCourseCategories((prev) => [
+        ...prev.filter((cat) => cat.value !== "uncategorized"),
         newCategory,
-        { value: "uncategorized", label: "بدون تصنيف" }
+        { value: "uncategorized", label: "بدون تصنيف" },
       ]);
-      
-      setselectedCourseTitleOption(newCategory);
+
+      setSelectedCourseTitleOption(newCategory);
       setAddCategory("");
       setIsDialogOpen(false);
     } catch (err) {
       console.error("Error adding category:", err);
       setDialogError("فشل إضافة التصنيف. يرجى المحاولة مرة أخرى.");
     } finally {
-      setIsSubmitting(false);
+      setIsAddingCategory(false);
     }
   };
 
 
-  const createHandleChange = (
-    setter: React.Dispatch<React.SetStateAction<options | null>>
-  ) => {
-    return (opt: SingleValue<options>) => {
-      setter(opt);
-    };
-  };
-
-
+  // --- Fetch Teachers ---
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        // const token = localStorage.getItem("auth_token"); // Adjust token retrieval as needed
-        // if (!token) {
-        //   throw new Error("Authentication token not found");
-        // }
+        const response = await fetch("http://127.0.0.1:8000/api/users", {
+          headers: {
+            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+            Accept: "application/json",
+          },
+        });
 
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/users",
-          {
-            headers: {
-              "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
-              Accept: "application/json",
-              // Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
-        
-        // Transform API response to options format
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedData = data.data.map((teachers: any) => ({
-          value: teachers.id.toString(),
-          label: teachers.firstname+" "+teachers.lastname,
+        const transformed = data.data.map((t: any) => ({
+          value: t.id,
+          label: t.firstname + " " + t.lastname,
         }));
 
-        setTearchers([
-          ...transformedData,
-        ]);
-        if (!selectedTeacher && transformedData.length > 0) {
-          setselectedTeacher(transformedData[0]);
-        }
-        
+        setTeachers(transformed);
+        if (!selectedTeacher && transformed.length > 0) setSelectedTeacher(transformed[transformed.length]);
       } catch (err) {
         console.error("Error fetching teachers:", err);
         setTeachersError("فشل تحميل المدرسين. يرجى المحاولة لاحقًا.");
@@ -213,46 +218,28 @@ export default function CourseEdit() {
 
 
 
+  // --- Fetch Categories ---
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // const token = localStorage.getItem("auth_token"); // Adjust token retrieval as needed
-        // if (!token) {
-        //   throw new Error("Authentication token not found");
-        // }
+        const response = await fetch("http://127.0.0.1:8000/api/course-categories", {
+          headers: {
+            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+            Accept: "application/json",
+          },
+        });
 
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/course-categories",
-          {
-            headers: {
-              "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
-              Accept: "application/json",
-              // Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
-        
-        // Transform API response to options format
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedData = data.data.map((category: any) => ({
-          value: category.id.toString(),
-          label: category.name,
+        const transformed = data.data.map((c: any) => ({
+          value: c.id,
+          label: c.name,
         }));
 
-        setCourseCategories([
-          ...transformedData,
-          { value: "uncategorized", label: "بدون تصنيف" },
-        ]);
-        
-        if (!selectedCourseTitleOption && transformedData.length > 0) {
-          setselectedCourseTitleOption(transformedData[0]);
-        }
+        setCourseCategories([...transformed, { value: "uncategorized", label: "بدون تصنيف" }]);
+        if (!selectedCourseTitleOption && transformed.length > 0) setSelectedCourseTitleOption(transformed[transformed.length]);
       } catch (err) {
         console.error("Error fetching categories:", err);
         setCategoriesError("فشل تحميل التصنيفات. يرجى المحاولة لاحقًا.");
@@ -264,13 +251,63 @@ export default function CourseEdit() {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    if (!isAtLeastMd && showSidebar) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
+
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const uploadedFiles = attachmentRef.current?.getUploadedFiles();
+      const featuredImageId = uploadedFiles && uploadedFiles[0]?.id;
+
+      const courseData = {
+        title: courseDetails.title,
+        description: editorContent,
+        is_paid: courseDetails.isPaid, // Adjust based on if the course is paid
+        price: courseDetails.originalPrice?? 0,
+        discounted_price: courseDetails.discountedPrice?? 0,
+        total_number_of_students: courseDetails.maxStudents?? 1,
+        what_would_be_learned: "Learn how to program in PHP",
+        target_audience: courseDetails.targetAudience,
+        total_time: courseDetails.totalTime?? 0,
+        prerequisites: courseDetails.prerequisites,
+        video_type: 1, // ############# here 
+        video_source: "https://www.youtube.com/watch?v=iAFce6VPgD4", // ############ here
+        featured_image: featuredImageId ,//|| null,
+        course_category_id: selectedCourseTitleOption?.value, // Replace with actual selected category id
+        tutor_id: selectedTeacher?.value, // Replace with actual selected tutor id
+        open_for_all: isFeatured,
+      };
+
+      const response = await fetch("http://127.0.0.1:8000/api/courses", {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(courseData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error submitting the course");
+      }
+
+      const data = await response.json();
+      console.log("Course submitted successfully:", data);
+      // Handle success
+    } catch (err) {
+      console.error("Error submitting course:", err);
+      // Handle error
+    } finally {
+      setIsSubmitting(false);
     }
-    // clean-up if component unmounts
+  };
+
+  // --- Sidebar scroll lock ---
+  useEffect(() => {
+    if (!isAtLeastMd && showSidebar) document.body.classList.add("overflow-hidden");
+    else document.body.classList.remove("overflow-hidden");
     return () => document.body.classList.remove("overflow-hidden");
   }, [isAtLeastMd, showSidebar]);
 
@@ -326,7 +363,7 @@ export default function CourseEdit() {
                       classNamePrefix="react-select"
                       value={selectedCourseTitleOption}
                       onChange={createHandleChange(
-                        setselectedCourseTitleOption
+                        setSelectedCourseTitleOption
                       )}
                       options={courseCategories}
                       isSearchable
@@ -383,7 +420,7 @@ export default function CourseEdit() {
                           if (!trimmed) return;
                           const newCat = { value: trimmed, label: trimmed };
                           setCourseCategories((cats) => [...cats, newCat]);
-                          setselectedCourseTitleOption(newCat);
+                          setSelectedCourseTitleOption(newCat);
                           setAddCategory("");
                           setIsDialogOpen(false);
                           await handleAddCategory(trimmed);
@@ -417,8 +454,8 @@ export default function CourseEdit() {
                           )}
                         </div>
                         <DialogFooter className="flex justify-center! w-full">
-                          <Button type="submit" disabled={isSubmitting} className="flex justify-center">
-                            {isSubmitting ? "جاري الإضافة..." : "أضف التصنيف"}
+                          <Button type="submit" disabled={isAddingCategory} className="flex justify-center">
+                            {isAddingCategory ? "جاري الإضافة..." : "أضف التصنيف"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -432,7 +469,7 @@ export default function CourseEdit() {
               >
                 <div className={`${CourseEditCSS.label}`}>عنوان الدورة</div>
                 <div className={`${CourseEditCSS.courseTitleTextBarContainer}`}>
-                  <input dir="rtl" type="text" />
+                  <input dir="rtl" type="text" name="title" value={courseDetails.title} onChange={handleInputChange}/>
                 </div>
               </div>
             </div>
@@ -453,14 +490,14 @@ export default function CourseEdit() {
               <div className={`${CourseEditCSS.label}`}>المعلم</div>
               {areTeachersLoading ? (
   <div className={CourseEditCSS.label}>جارٍ تحميل التصنيفات...</div>
-) : TeachersError ? (
-  <div className={CourseEditCSS.redLabel}>{TeachersError}</div>
+) : teachersError ? (
+  <div className={CourseEditCSS.redLabel}>{teachersError}</div>
 ) : (
               <div>
                 <Select
                   classNamePrefix="react-select"
                   value={selectedTeacher}
-                  onChange={createHandleChange(setselectedTeacher)}
+                  onChange={createHandleChange(setSelectedTeacher)}
                   options={teachers}
                   isSearchable
                   styles={{
@@ -498,7 +535,7 @@ export default function CourseEdit() {
               className={`${CourseEditCSS.prominentImageContainer} flex flex-col gap-1.5 mt-8`}
             >
               <div className={`${CourseEditCSS.label}`}>صورة بارزة</div>
-              <AttachmentUploader />
+              <AttachmentUploader ref={attachmentRef} maxFiles={1} onUploadComplete={() => console.log('File uploaded')} />
             </div>
 
             <div className="introVideosAndOtherInputsContainer mt-16 pb-8">
@@ -506,17 +543,33 @@ export default function CourseEdit() {
                 {/* Cell 1: Intro video selector + uploader */}
                 {isAtLeastMd && (
                   <div className="flex justify-center items-center">
-                    {selectedStartingVideos?.value !== "لا يوجد" && (
-                      <VideoUploader
-                        acceptedTypes={
-                          videoTypeMap[selectedStartingVideos?.value || "MP4"]
-                        }
-                        maxFiles={1}
-                        maxSize={2000}
-                      />
-                    )}
-                  </div>
-                )}
+    {selectedStartingVideos?.value !== "لا يوجد" && (
+      <>
+        {selectedStartingVideos?.value === "رابط خارجي" ? (
+          <div className="flex justify-center flex-col w-full gap-3.5">
+            <label className={`${CourseEditCSS.label}`}>أدخل الرابط الخارجي</label>
+            <div className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}>
+            <input
+            className="w-full"
+              type="url"
+              placeholder="https://example.com"
+              onChange={(e) => setExternalLink(e.target.value)}
+            />
+            </div>
+          </div>
+        ) : (
+          <VideoUploader
+            acceptedTypes={
+              videoTypeMap[selectedStartingVideos?.value || "MP4"]
+            }
+            maxFiles={1}
+            maxSize={2000}
+          />
+        )}
+      </>
+    )}
+  </div>
+)}
                 <div className="col-span-1 flex flex-col gap-4">
                   <label className="text-gray-600 text-sm text-right">
                     فيديو المقدمة
@@ -524,7 +577,7 @@ export default function CourseEdit() {
                   <Select
                     classNamePrefix="react-select"
                     value={selectedStartingVideos}
-                    onChange={createHandleChange(setselectedStartingVideos)}
+                    onChange={createHandleChange(setSelectedStartingVideos)}
                     options={IntroVideos}
                     isSearchable
                     styles={{
@@ -556,18 +609,34 @@ export default function CourseEdit() {
                   />
                 </div>
                 {!isAtLeastMd && (
-                  <div className="flex justify-center items-center">
-                    {selectedStartingVideos?.value !== "لا يوجد" && (
-                      <VideoUploader
-                        acceptedTypes={
-                          videoTypeMap[selectedStartingVideos?.value || "MP4"]
-                        }
-                        maxFiles={1}
-                        maxSize={2000}
-                      />
-                    )}
-                  </div>
-                )}
+  <div className="flex justify-center items-center">
+    {selectedStartingVideos?.value !== "لا يوجد" && (
+      <>
+        {selectedStartingVideos?.value === "رابط خارجي" ? (
+          <div className="flex justify-center flex-col w-full gap-3.5">
+            <label className={`${CourseEditCSS.label}`}>أدخل الرابط الخارجي</label>
+            <div className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}>
+            <input
+            className="w-full"
+              type="url"
+              placeholder="https://example.com"
+              onChange={(e) => setExternalLink(e.target.value)}
+            />
+            </div>
+          </div>
+        ) : (
+          <VideoUploader
+            acceptedTypes={
+              videoTypeMap[selectedStartingVideos?.value || "MP4"]
+            }
+            maxFiles={1}
+            maxSize={2000}
+          />
+        )}
+      </>
+    )}
+  </div>
+)}
 
                 {/* Cell 2: Duration */}
                 <div className="col-span-1 flex flex-col gap-1.5">
@@ -579,6 +648,10 @@ export default function CourseEdit() {
                       dir="rtl"
                       type="number"
                       className="courseDurationTextBarContainer"
+                      name="totalTime"
+                      value={courseDetails.totalTime??''}
+                      onChange={handleInputChange}
+                      placeholder="0"
                     />
                   </div>
                 </div>
@@ -593,6 +666,9 @@ export default function CourseEdit() {
                       dir="rtl"
                       type="text"
                       className="courseDurationTextBarContainer"
+                      name="targetAudience"
+                      value={courseDetails.targetAudience}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -603,7 +679,7 @@ export default function CourseEdit() {
                   <Select
                     classNamePrefix="react-select"
                     value={selectedLevel}
-                    onChange={createHandleChange(setselectedLevel)}
+                    onChange={createHandleChange(setSelectedLevel)}
                     options={Levels}
                     isSearchable
                     styles={{
@@ -645,6 +721,9 @@ export default function CourseEdit() {
                       dir="rtl"
                       type="text"
                       className="courseDurationTextBarContainer"
+                      name="prerequisites"
+                      value={courseDetails.prerequisites}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -671,23 +750,35 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.CourseTypeCheckContainer} flex flex-row justify-end gap-8`}
                         >
-                          {CourseType.map((type) => (
                             <label
-                              key={type}
-                              htmlFor={`course-${type}`}
+                              htmlFor="course-free"
                               className="inline-flex gap-1 items-baseline"
                             >
                               <input
-                                id={`course-${type}`}
+                                id="course-free"
                                 type="radio"
-                                name="courseType"
-                                value={type}
-                                checked={courseType === type}
-                                onChange={() => setCourseType(type)}
+                                name="isPaid"
+                                value="false"
+                                checked={!courseDetails.isPaid}
+                                onChange={() => setCourseDetails(prev => ({ ...prev, isPaid: false }))}
                               />
-                              {CourseTypeLabels[type]}
+                              {CourseTypeLabels.free}
                             </label>
-                          ))}
+
+                            <label
+                              htmlFor="course-paid"
+                              className="inline-flex gap-1 items-baseline"
+                            >
+                              <input
+                                id="course-paid"
+                                type="radio"
+                                name="isPaid"
+                                value="true"
+                                checked={courseDetails.isPaid}
+                                onChange={() => setCourseDetails(prev => ({ ...prev, isPaid: true }))}
+                              />
+                              {CourseTypeLabels.paid}
+                            </label>
                         </div>
                       </div>
                     </div>
@@ -704,7 +795,7 @@ export default function CourseEdit() {
                     </div>
                   </div>
 
-                  {courseType === "paid" && (
+                  {courseDetails.isPaid && (
                     <div
                       className={`${CourseEditCSS.introVideosAndOtherInputsRightSide} flex flex-row gap-6`}
                     >
@@ -717,7 +808,7 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.courseDurationTextBarContainer}`}
                         >
-                          <input dir="rtl" type="number" />
+                          <input dir="rtl" type="number" name="discountedPrice" value={courseDetails.discountedPrice??''} onChange={handleInputChange}/>
                         </div>
                       </div>
 
@@ -728,7 +819,7 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.courseDurationTextBarContainer}`}
                         >
-                          <input dir="rtl" type="number" />
+                          <input dir="rtl" type="number" name="originalPrice" value={courseDetails.originalPrice??''} onChange={handleInputChange}/>
                         </div>
                       </div>
                     </div>
@@ -756,6 +847,9 @@ export default function CourseEdit() {
                             );
                             e.currentTarget.value = onlyDigits;
                           }}
+                          value={courseDetails.maxStudents??''}
+                          onChange={handleInputChange}
+                          name="maxStudents"
                         />
                       </div>
                     </div>
@@ -767,13 +861,13 @@ export default function CourseEdit() {
             <hr />
 
             <div className={CourseEditCSS.addCourseDiv}>
-              <button>
+              <button onClick={handleSubmit} disabled={isSubmitting}>
                 <img
                   src="/assets/imgs/plus_svgrepo_com.svg"
                   alt="Plus Icon"
                   className={`${CourseEditCSS.plusIcon} w-3`}
                 />
-                <span>إضافة الدورة</span>
+                <span>{isSubmitting ? "جاري الإرسال..." : "إضافة الدورة"}</span>
               </button>
             </div>
           </div>
