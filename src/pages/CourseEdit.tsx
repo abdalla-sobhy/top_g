@@ -7,13 +7,23 @@ import Select, { SingleValue } from "react-select";
 
 // Your reusable UI components
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 // Feature‑specific components
-import VideoUploader from "../components/VideoUploader";
-import AttachmentUploader, { AttachmentUploaderRef } from "../components/AttachmentUploader";
+import VideoUploader, { VideoUploaderRef } from "../components/VideoUploader";
+import AttachmentUploader, {
+  AttachmentUploaderRef,
+} from "../components/AttachmentUploader";
 import RichTextEditor from "../components/RichTextEditor";
 import SideBar from "@/components/SideBar";
 
@@ -25,7 +35,6 @@ interface options {
   value: string;
   label: string;
 }
-
 
 interface CourseDetails {
   title: string;
@@ -55,14 +64,13 @@ const IntroVideos: options[] = [
   { value: "رابط خارجي", label: "رابط خارجي" },
 ];
 
-const videoTypeMap: { [key: string]: string[] } = {
-  MP4: ["video/mp4"],
-  MKV: ["video/x-matroska"],
-  يوتيوب: [],
-  مضمن: [],
-  "رابط خارجي": [],
-};
-
+// const videoTypeMap: { [key: string]: string[] } = {
+//   MP4: ["video/mp4"],
+//   MKV: ["video/x-matroska"],
+//   يوتيوب: [],
+//   مضمن: [],
+//   "رابط خارجي": [],
+// };
 
 const CourseTypeLabels = {
   free: "مجانية",
@@ -71,13 +79,16 @@ const CourseTypeLabels = {
 
 export default function CourseEdit() {
   // --- Course categories ---
-  const [courseCategories, setCourseCategories] = useState<options[]>([{
-    value: "uncategorized",
-    label: "بدون تصنيف",
-  }]);
+  const [courseCategories, setCourseCategories] = useState<options[]>([
+    {
+      value: "uncategorized",
+      label: "بدون تصنيف",
+    },
+  ]);
   const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const [selectedCourseTitleOption, setSelectedCourseTitleOption] = useState<options | null>(null);
+  const [selectedCourseTitleOption, setSelectedCourseTitleOption] =
+    useState<options | null>(null);
 
   // --- Teachers ---
   const [teachers, setTeachers] = useState<options[]>([]);
@@ -97,7 +108,8 @@ export default function CourseEdit() {
   const isAtLeastMd = useMediaQuery({ minWidth: 768 });
 
   // --- Course Info ---
-  const [selectedStartingVideos, setSelectedStartingVideos] = useState<options | null>(IntroVideos[0]);
+  const [selectedStartingVideos, setSelectedStartingVideos] =
+    useState<options | null>(IntroVideos[0]);
   const [selectedLevel, setSelectedLevel] = useState<options | null>(Levels[0]);
   const [isFeatured, setIsFeatured] = useState(false);
 
@@ -113,32 +125,52 @@ export default function CourseEdit() {
     totalTime: null,
   });
 
+  // --- Course Errors ---
+  const [courseErrors, setCourseErrors] = useState({
+    title: "",
+    maxStudents: "",
+    targetAudience: "",
+    prerequisites: "",
+    originalPrice: "",
+    discountedPrice: "",
+    totalTime: "",
+  });
+
   // --- Image ---
   const attachmentRef = useRef<AttachmentUploaderRef>(null);
 
-  // --- Video ---
+  // --- Video Lnik ---
   const [externalLink, setExternalLink] = useState("");
   console.log(externalLink);
 
+  // --- Video Uploader ---
+  const videoUploaderRef = useRef<VideoUploaderRef>(null);
+
   // --- Helpers ---
-  const createHandleChange = (setter: React.Dispatch<React.SetStateAction<options | null>>) => {
+  const createHandleChange = (
+    setter: React.Dispatch<React.SetStateAction<options | null>>
+  ) => {
     return (opt: SingleValue<options>) => setter(opt);
   };
 
   // ---Submitting ---
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
   // --- General Input Change Handler ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const updatedValue = ["maxStudents", "originalPrice", "discountedPrice", "totalTime"].includes(name)
+    const updatedValue = [
+      "maxStudents",
+      "originalPrice",
+      "discountedPrice",
+      "totalTime",
+    ].includes(name)
       ? parseInt(value.replace(/\D/g, ""))
       : value;
 
-    setCourseDetails(prev => ({
+    setCourseDetails((prev) => ({
       ...prev,
-      [name]: updatedValue
+      [name]: updatedValue,
     }));
   };
 
@@ -146,15 +178,18 @@ export default function CourseEdit() {
     setDialogError(null);
     setIsAddingCategory(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/course-categories", {
-        method: "POST",
-        headers: {
-          "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: categoryName }),
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/course-categories",
+        {
+          method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: categoryName }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -181,7 +216,6 @@ export default function CourseEdit() {
     }
   };
 
-
   // --- Fetch Teachers ---
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -193,7 +227,8 @@ export default function CourseEdit() {
           },
         });
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -203,7 +238,8 @@ export default function CourseEdit() {
         }));
 
         setTeachers(transformed);
-        if (!selectedTeacher && transformed.length > 0) setSelectedTeacher(transformed[transformed.length]);
+        if (!selectedTeacher && transformed.length > 0)
+          setSelectedTeacher(transformed[transformed.length]);
       } catch (err) {
         console.error("Error fetching teachers:", err);
         setTeachersError("فشل تحميل المدرسين. يرجى المحاولة لاحقًا.");
@@ -215,21 +251,22 @@ export default function CourseEdit() {
     fetchTeachers();
   }, []);
 
-
-
-
   // --- Fetch Categories ---
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/course-categories", {
-          headers: {
-            "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
-            Accept: "application/json",
-          },
-        });
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/course-categories",
+          {
+            headers: {
+              "X-CSRF-TOKEN": "REPLACE_X_CSRF_TOKEN",
+              Accept: "application/json",
+            },
+          }
+        );
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,8 +275,12 @@ export default function CourseEdit() {
           label: c.name,
         }));
 
-        setCourseCategories([...transformed, { value: "uncategorized", label: "بدون تصنيف" }]);
-        if (!selectedCourseTitleOption && transformed.length > 0) setSelectedCourseTitleOption(transformed[transformed.length]);
+        setCourseCategories([
+          ...transformed,
+          { value: "uncategorized", label: "بدون تصنيف" },
+        ]);
+        if (!selectedCourseTitleOption && transformed.length > 0)
+          setSelectedCourseTitleOption(transformed[transformed.length]);
       } catch (err) {
         console.error("Error fetching categories:", err);
         setCategoriesError("فشل تحميل التصنيفات. يرجى المحاولة لاحقًا.");
@@ -251,28 +292,81 @@ export default function CourseEdit() {
     fetchCategories();
   }, []);
 
-
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
+
+    const errors = {
+      title: courseDetails.title.trim() === "" ? "العنوان مطلوب" : "",
+      maxStudents:
+        courseDetails.maxStudents === null ||
+        isNaN(courseDetails.maxStudents) ||
+        courseDetails.maxStudents < 1
+          ? "عدد الطلاب يجب أن يكون رقم أكبر من أو يساوي 1"
+          : "",
+      targetAudience:
+        courseDetails.targetAudience.trim() === ""
+          ? "الجمهور المستهدف مطلوب"
+          : "",
+      prerequisites:
+        courseDetails.prerequisites.trim() === ""
+          ? "المتطلبات المسبقة مطلوبة"
+          : "",
+      originalPrice:
+        courseDetails.isPaid &&
+        (courseDetails.originalPrice === null ||
+          isNaN(courseDetails.originalPrice))
+          ? "السعر الأصلي مطلوب"
+          : "",
+      discountedPrice:
+        courseDetails.isPaid && courseDetails.discountedPrice === null
+          ? "السعر بعد الخصم مطلوب"
+          : courseDetails.discountedPrice !== null &&
+            (isNaN(courseDetails.discountedPrice) ||
+              courseDetails.discountedPrice >
+                (courseDetails.originalPrice ?? 0))
+          ? "يجب ألا يكون السعر بعد الخصم أكبر من السعر الأصلي"
+          : "",
+      totalTime:
+        courseDetails.totalTime === null ||
+        isNaN(courseDetails.totalTime) ||
+        courseDetails.totalTime < 1
+          ? "مدة الدورة مطلوبة ويجب أن تكون وقتًا صحيحًا"
+          : "",
+    };
+
+    setCourseErrors(errors);
+
+    const hasErrors = Object.values(errors).some((err) => err !== "");
+    if (hasErrors) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const uploadedFiles = attachmentRef.current?.getUploadedFiles();
       const featuredImageId = uploadedFiles && uploadedFiles[0]?.id;
+
+      const uploadedVideo = videoUploaderRef.current?.getUploadedFiles?.()[0];
+      const videoSource = uploadedVideo?.id || "";
+      console.log(videoUploaderRef);
+      console.log("here" + videoSource);
 
       const courseData = {
         title: courseDetails.title,
         description: editorContent,
         is_paid: courseDetails.isPaid, // Adjust based on if the course is paid
-        price: courseDetails.originalPrice?? 0,
-        discounted_price: courseDetails.discountedPrice?? 0,
-        total_number_of_students: courseDetails.maxStudents?? 1,
+        price: courseDetails.isPaid ? courseDetails.originalPrice : 0,
+        discounted_price: courseDetails.isPaid
+          ? courseDetails.discountedPrice
+          : 0,
+        total_number_of_students: courseDetails.maxStudents,
         what_would_be_learned: "Learn how to program in PHP",
         target_audience: courseDetails.targetAudience,
-        total_time: courseDetails.totalTime?? 0,
+        total_time: courseDetails.totalTime,
         prerequisites: courseDetails.prerequisites,
-        video_type: 1, // ############# here 
-        video_source: "https://www.youtube.com/watch?v=iAFce6VPgD4", // ############ here
-        featured_image: featuredImageId ,//|| null,
+        video_type: 0, // ############# here
+        video_source: videoSource, // ############ here
+        featured_image: featuredImageId, //|| null,
         course_category_id: selectedCourseTitleOption?.value, // Replace with actual selected category id
         tutor_id: selectedTeacher?.value, // Replace with actual selected tutor id
         open_for_all: isFeatured,
@@ -306,7 +400,8 @@ export default function CourseEdit() {
 
   // --- Sidebar scroll lock ---
   useEffect(() => {
-    if (!isAtLeastMd && showSidebar) document.body.classList.add("overflow-hidden");
+    if (!isAtLeastMd && showSidebar)
+      document.body.classList.add("overflow-hidden");
     else document.body.classList.remove("overflow-hidden");
     return () => document.body.classList.remove("overflow-hidden");
   }, [isAtLeastMd, showSidebar]);
@@ -351,52 +446,56 @@ export default function CourseEdit() {
               >
                 <div className={CourseEditCSS.label}>تصنيف الدورة</div>
                 {areCategoriesLoading ? (
-  <div className={CourseEditCSS.label}>جارٍ تحميل التصنيفات...</div>
-) : categoriesError ? (
-  <div className={CourseEditCSS.redLabel}>{categoriesError}</div>
-) : (
-                <div
-                  className={`${CourseEditCSS.courseClassificationDropdownContainer} md:w-fit w-full flex justify-end`}
-                >
-                  <div className=" w-32">
-                    <Select
-                      classNamePrefix="react-select"
-                      value={selectedCourseTitleOption}
-                      onChange={createHandleChange(
-                        setSelectedCourseTitleOption
-                      )}
-                      options={courseCategories}
-                      isSearchable
-                      styles={{
-                        control: (base, { isFocused }) => ({
-                          ...base,
-                          backgroundColor: "#E5E7EB",
-                          borderColor: isFocused ? "#ccc" : "#E5E7EB",
-                          boxShadow: "none",
-                          minHeight: "32px",
-                          "&:hover": {
-                            backgroundColor: "#D1D5DB",
-                            borderColor: "#ccc",
-                          },
-                        }),
-                        option: (base, { isFocused, isSelected }) => ({
-                          ...base,
-                          backgroundColor: isFocused
-                            ? "#E5E7EB"
-                            : isSelected
-                            ? "white"
-                            : undefined,
-                          color: "#333",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          padding: "6px 12px",
-                          ":active": { backgroundColor: "#E5E7EB" },
-                        }),
-                      }}
-                    />
+                  <div className={CourseEditCSS.label}>
+                    جارٍ تحميل التصنيفات...
                   </div>
-                </div>
-)}
+                ) : categoriesError ? (
+                  <div className={CourseEditCSS.redLabel}>
+                    {categoriesError}
+                  </div>
+                ) : (
+                  <div
+                    className={`${CourseEditCSS.courseClassificationDropdownContainer} md:w-fit w-full flex justify-end`}
+                  >
+                    <div className=" w-32">
+                      <Select
+                        classNamePrefix="react-select"
+                        value={selectedCourseTitleOption}
+                        onChange={createHandleChange(
+                          setSelectedCourseTitleOption
+                        )}
+                        options={courseCategories}
+                        isSearchable
+                        styles={{
+                          control: (base, { isFocused }) => ({
+                            ...base,
+                            backgroundColor: "#E5E7EB",
+                            borderColor: isFocused ? "#ccc" : "#E5E7EB",
+                            boxShadow: "none",
+                            minHeight: "32px",
+                            "&:hover": {
+                              backgroundColor: "#D1D5DB",
+                              borderColor: "#ccc",
+                            },
+                          }),
+                          option: (base, { isFocused, isSelected }) => ({
+                            ...base,
+                            backgroundColor: isFocused
+                              ? "#E5E7EB"
+                              : isSelected
+                              ? "white"
+                              : undefined,
+                            color: "#333",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            padding: "6px 12px",
+                            ":active": { backgroundColor: "#E5E7EB" },
+                          }),
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className={CourseEditCSS.AddClassification}>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
@@ -454,8 +553,14 @@ export default function CourseEdit() {
                           )}
                         </div>
                         <DialogFooter className="flex justify-center! w-full">
-                          <Button type="submit" disabled={isAddingCategory} className="flex justify-center">
-                            {isAddingCategory ? "جاري الإضافة..." : "أضف التصنيف"}
+                          <Button
+                            type="submit"
+                            disabled={isAddingCategory}
+                            className="flex justify-center"
+                          >
+                            {isAddingCategory
+                              ? "جاري الإضافة..."
+                              : "أضف التصنيف"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -469,7 +574,18 @@ export default function CourseEdit() {
               >
                 <div className={`${CourseEditCSS.label}`}>عنوان الدورة</div>
                 <div className={`${CourseEditCSS.courseTitleTextBarContainer}`}>
-                  <input dir="rtl" type="text" name="title" value={courseDetails.title} onChange={handleInputChange}/>
+                  <input
+                    dir="rtl"
+                    type="text"
+                    name="title"
+                    value={courseDetails.title}
+                    onChange={handleInputChange}
+                  />
+                  {courseErrors.title && (
+                    <div className="text-red-500 text-sm mt-1 text-end">
+                      {courseErrors.title}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -489,45 +605,47 @@ export default function CourseEdit() {
             >
               <div className={`${CourseEditCSS.label}`}>المعلم</div>
               {areTeachersLoading ? (
-  <div className={CourseEditCSS.label}>جارٍ تحميل التصنيفات...</div>
-) : teachersError ? (
-  <div className={CourseEditCSS.redLabel}>{teachersError}</div>
-) : (
-              <div>
-                <Select
-                  classNamePrefix="react-select"
-                  value={selectedTeacher}
-                  onChange={createHandleChange(setSelectedTeacher)}
-                  options={teachers}
-                  isSearchable
-                  styles={{
-                    control: (base, { isFocused }) => ({
-                      ...base,
-                      backgroundColor: "#E5E7EB",
-                      borderColor: isFocused ? "#ccc" : "#E5E7EB",
-                      boxShadow: "none",
-                      minHeight: "32px",
-                      "&:hover": {
-                        backgroundColor: "#D1D5DB",
-                        borderColor: "#ccc",
-                      },
-                    }),
-                    option: (base, { isFocused, isSelected }) => ({
-                      ...base,
-                      backgroundColor: isFocused
-                        ? "#E5E7EB"
-                        : isSelected
-                        ? "white"
-                        : undefined,
-                      color: "#333",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                      padding: "6px 12px",
-                      ":active": { backgroundColor: "#E5E7EB" },
-                    }),
-                  }}
-                />
-              </div>
+                <div className={CourseEditCSS.label}>
+                  جارٍ تحميل التصنيفات...
+                </div>
+              ) : teachersError ? (
+                <div className={CourseEditCSS.redLabel}>{teachersError}</div>
+              ) : (
+                <div>
+                  <Select
+                    classNamePrefix="react-select"
+                    value={selectedTeacher}
+                    onChange={createHandleChange(setSelectedTeacher)}
+                    options={teachers}
+                    isSearchable
+                    styles={{
+                      control: (base, { isFocused }) => ({
+                        ...base,
+                        backgroundColor: "#E5E7EB",
+                        borderColor: isFocused ? "#ccc" : "#E5E7EB",
+                        boxShadow: "none",
+                        minHeight: "32px",
+                        "&:hover": {
+                          backgroundColor: "#D1D5DB",
+                          borderColor: "#ccc",
+                        },
+                      }),
+                      option: (base, { isFocused, isSelected }) => ({
+                        ...base,
+                        backgroundColor: isFocused
+                          ? "#E5E7EB"
+                          : isSelected
+                          ? "white"
+                          : undefined,
+                        color: "#333",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        padding: "6px 12px",
+                        ":active": { backgroundColor: "#E5E7EB" },
+                      }),
+                    }}
+                  />
+                </div>
               )}
             </div>
 
@@ -535,7 +653,11 @@ export default function CourseEdit() {
               className={`${CourseEditCSS.prominentImageContainer} flex flex-col gap-1.5 mt-8`}
             >
               <div className={`${CourseEditCSS.label}`}>صورة بارزة</div>
-              <AttachmentUploader ref={attachmentRef} maxFiles={1} onUploadComplete={() => console.log('File uploaded')} />
+              <AttachmentUploader
+                ref={attachmentRef}
+                maxFiles={1}
+                onUploadComplete={() => console.log("File uploaded")}
+              />
             </div>
 
             <div className="introVideosAndOtherInputsContainer mt-16 pb-8">
@@ -543,33 +665,36 @@ export default function CourseEdit() {
                 {/* Cell 1: Intro video selector + uploader */}
                 {isAtLeastMd && (
                   <div className="flex justify-center items-center">
-    {selectedStartingVideos?.value !== "لا يوجد" && (
-      <>
-        {selectedStartingVideos?.value === "رابط خارجي" ? (
-          <div className="flex justify-center flex-col w-full gap-3.5">
-            <label className={`${CourseEditCSS.label}`}>أدخل الرابط الخارجي</label>
-            <div className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}>
-            <input
-            className="w-full"
-              type="url"
-              placeholder="https://example.com"
-              onChange={(e) => setExternalLink(e.target.value)}
-            />
-            </div>
-          </div>
-        ) : (
-          <VideoUploader
-            acceptedTypes={
-              videoTypeMap[selectedStartingVideos?.value || "MP4"]
-            }
-            maxFiles={1}
-            maxSize={2000}
-          />
-        )}
-      </>
-    )}
-  </div>
-)}
+                    {selectedStartingVideos?.value !== "لا يوجد" && (
+                      <>
+                        {selectedStartingVideos?.value === "رابط خارجي" ? (
+                          <div className="flex justify-center flex-col w-full gap-3.5">
+                            <label className={`${CourseEditCSS.label}`}>
+                              أدخل الرابط الخارجي
+                            </label>
+                            <div
+                              className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}
+                            >
+                              <input
+                                className="w-full"
+                                type="url"
+                                placeholder="https://example.com"
+                                onChange={(e) =>
+                                  setExternalLink(e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <VideoUploader
+                            ref={videoUploaderRef}
+                            instantUpload={true}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
                 <div className="col-span-1 flex flex-col gap-4">
                   <label className="text-gray-600 text-sm text-right">
                     فيديو المقدمة
@@ -609,34 +734,37 @@ export default function CourseEdit() {
                   />
                 </div>
                 {!isAtLeastMd && (
-  <div className="flex justify-center items-center">
-    {selectedStartingVideos?.value !== "لا يوجد" && (
-      <>
-        {selectedStartingVideos?.value === "رابط خارجي" ? (
-          <div className="flex justify-center flex-col w-full gap-3.5">
-            <label className={`${CourseEditCSS.label}`}>أدخل الرابط الخارجي</label>
-            <div className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}>
-            <input
-            className="w-full"
-              type="url"
-              placeholder="https://example.com"
-              onChange={(e) => setExternalLink(e.target.value)}
-            />
-            </div>
-          </div>
-        ) : (
-          <VideoUploader
-            acceptedTypes={
-              videoTypeMap[selectedStartingVideos?.value || "MP4"]
-            }
-            maxFiles={1}
-            maxSize={2000}
-          />
-        )}
-      </>
-    )}
-  </div>
-)}
+                  <div className="flex justify-center items-center">
+                    {selectedStartingVideos?.value !== "لا يوجد" && (
+                      <>
+                        {selectedStartingVideos?.value === "رابط خارجي" ? (
+                          <div className="flex justify-center flex-col w-full gap-3.5">
+                            <label className={`${CourseEditCSS.label}`}>
+                              أدخل الرابط الخارجي
+                            </label>
+                            <div
+                              className={`${CourseEditCSS.courseDurationTextBarContainer} w-full`}
+                            >
+                              <input
+                                className="w-full"
+                                type="url"
+                                placeholder="https://example.com"
+                                onChange={(e) =>
+                                  setExternalLink(e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <VideoUploader
+                            ref={videoUploaderRef}
+                            instantUpload={true}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* Cell 2: Duration */}
                 <div className="col-span-1 flex flex-col gap-1.5">
@@ -649,10 +777,15 @@ export default function CourseEdit() {
                       type="number"
                       className="courseDurationTextBarContainer"
                       name="totalTime"
-                      value={courseDetails.totalTime??''}
+                      value={courseDetails.totalTime ?? ""}
                       onChange={handleInputChange}
                       placeholder="0"
                     />
+                    {courseErrors.totalTime && (
+                      <div className="text-red-500 text-sm mt-1 text-end">
+                        {courseErrors.totalTime}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -670,6 +803,11 @@ export default function CourseEdit() {
                       value={courseDetails.targetAudience}
                       onChange={handleInputChange}
                     />
+                    {courseErrors.targetAudience && (
+                      <div className="text-red-500 text-sm mt-1 text-end">
+                        {courseErrors.targetAudience}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -725,6 +863,11 @@ export default function CourseEdit() {
                       value={courseDetails.prerequisites}
                       onChange={handleInputChange}
                     />
+                    {courseErrors.prerequisites && (
+                      <div className="text-red-500 text-sm mt-1 text-end">
+                        {courseErrors.prerequisites}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -750,35 +893,45 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.CourseTypeCheckContainer} flex flex-row justify-end gap-8`}
                         >
-                            <label
-                              htmlFor="course-free"
-                              className="inline-flex gap-1 items-baseline"
-                            >
-                              <input
-                                id="course-free"
-                                type="radio"
-                                name="isPaid"
-                                value="false"
-                                checked={!courseDetails.isPaid}
-                                onChange={() => setCourseDetails(prev => ({ ...prev, isPaid: false }))}
-                              />
-                              {CourseTypeLabels.free}
-                            </label>
+                          <label
+                            htmlFor="course-free"
+                            className="inline-flex gap-1 items-baseline"
+                          >
+                            <input
+                              id="course-free"
+                              type="radio"
+                              name="isPaid"
+                              value="false"
+                              checked={!courseDetails.isPaid}
+                              onChange={() =>
+                                setCourseDetails((prev) => ({
+                                  ...prev,
+                                  isPaid: false,
+                                }))
+                              }
+                            />
+                            {CourseTypeLabels.free}
+                          </label>
 
-                            <label
-                              htmlFor="course-paid"
-                              className="inline-flex gap-1 items-baseline"
-                            >
-                              <input
-                                id="course-paid"
-                                type="radio"
-                                name="isPaid"
-                                value="true"
-                                checked={courseDetails.isPaid}
-                                onChange={() => setCourseDetails(prev => ({ ...prev, isPaid: true }))}
-                              />
-                              {CourseTypeLabels.paid}
-                            </label>
+                          <label
+                            htmlFor="course-paid"
+                            className="inline-flex gap-1 items-baseline"
+                          >
+                            <input
+                              id="course-paid"
+                              type="radio"
+                              name="isPaid"
+                              value="true"
+                              checked={courseDetails.isPaid}
+                              onChange={() =>
+                                setCourseDetails((prev) => ({
+                                  ...prev,
+                                  isPaid: true,
+                                }))
+                              }
+                            />
+                            {CourseTypeLabels.paid}
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -808,7 +961,18 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.courseDurationTextBarContainer}`}
                         >
-                          <input dir="rtl" type="number" name="discountedPrice" value={courseDetails.discountedPrice??''} onChange={handleInputChange}/>
+                          <input
+                            dir="rtl"
+                            type="number"
+                            name="discountedPrice"
+                            value={courseDetails.discountedPrice ?? ""}
+                            onChange={handleInputChange}
+                          />
+                          {courseErrors.discountedPrice && (
+                            <div className="text-red-500 text-sm mt-1 text-end">
+                              {courseErrors.discountedPrice}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -819,7 +983,18 @@ export default function CourseEdit() {
                         <div
                           className={`${CourseEditCSS.courseDurationTextBarContainer}`}
                         >
-                          <input dir="rtl" type="number" name="originalPrice" value={courseDetails.originalPrice??''} onChange={handleInputChange}/>
+                          <input
+                            dir="rtl"
+                            type="number"
+                            name="originalPrice"
+                            value={courseDetails.originalPrice ?? ""}
+                            onChange={handleInputChange}
+                          />
+                          {courseErrors.originalPrice && (
+                            <div className="text-red-500 text-sm mt-1 text-end">
+                              {courseErrors.originalPrice}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -847,10 +1022,15 @@ export default function CourseEdit() {
                             );
                             e.currentTarget.value = onlyDigits;
                           }}
-                          value={courseDetails.maxStudents??''}
+                          value={courseDetails.maxStudents ?? ""}
                           onChange={handleInputChange}
                           name="maxStudents"
                         />
+                        {courseErrors.maxStudents && (
+                          <div className="text-red-500 text-sm mt-1 text-end">
+                            {courseErrors.maxStudents}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
