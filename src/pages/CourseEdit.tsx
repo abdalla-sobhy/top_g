@@ -354,7 +354,7 @@ export default function CourseEdit() {
       const courseData = {
         title: courseDetails.title,
         description: editorContent,
-        is_paid: courseDetails.isPaid, // Adjust based on if the course is paid
+        is_paid: courseDetails.isPaid,
         price: courseDetails.isPaid ? courseDetails.originalPrice : 0,
         discounted_price: courseDetails.isPaid
           ? courseDetails.discountedPrice
@@ -364,11 +364,11 @@ export default function CourseEdit() {
         target_audience: courseDetails.targetAudience,
         total_time: courseDetails.totalTime,
         prerequisites: courseDetails.prerequisites,
-        video_type: 0, // ############# here
-        video_source: videoSource, // ############ here
+        video_type: 0,
+        video_source: videoSource,
         featured_image: featuredImageId, //|| null,
-        course_category_id: selectedCourseTitleOption?.value, // Replace with actual selected category id
-        tutor_id: selectedTeacher?.value, // Replace with actual selected tutor id
+        course_category_id: selectedCourseTitleOption?.value,
+        tutor_id: selectedTeacher?.value,
         open_for_all: isFeatured,
       };
 
@@ -389,16 +389,13 @@ export default function CourseEdit() {
 
       const data = await response.json();
       console.log("Course submitted successfully:", data);
-      // Handle success
     } catch (err) {
       console.error("Error submitting course:", err);
-      // Handle error
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // --- Sidebar scroll lock ---
   useEffect(() => {
     if (!isAtLeastMd && showSidebar)
       document.body.classList.add("overflow-hidden");
